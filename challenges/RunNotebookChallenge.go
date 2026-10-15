@@ -47,7 +47,6 @@ NotebookLoop:
 			break
 		}
 
-		// Перевірка на дублікат
 		duplicateIdx := findTaskByCondition(cond)
 		if duplicateIdx != -1 {
 			fmt.Printf("Це завдання вже вирішувалося раніше (№%d)!\n", duplicateIdx)

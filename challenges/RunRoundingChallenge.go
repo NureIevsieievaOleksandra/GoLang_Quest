@@ -48,7 +48,7 @@ RoundLoop:
 	generatedNumStr = strings.ReplaceAll(generatedNumStr, ",", ".")
 
 	if isCorrectRoundingWithoutLoops(generatedNumStr, userInput) {
-		fmt.Println("К: вірно.")
+		fmt.Println("К: правильно.")
 		correctCount++
 	} else {
 		fmt.Println("К: не так.")

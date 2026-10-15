@@ -56,7 +56,7 @@ MenuLoop:
 	case "3":
 		showScore(&state)
 	case "4":
-		fmt.Print("Скільки годин минуло? (наприклад, 8 або 24): ")
+		fmt.Print("Скільки годин минуло? ")
 		hours := utils.ReadFloat(reader)
 		if hours > 0 {
 			consumeResources(&state, hours)
@@ -125,7 +125,7 @@ SubMenuLoop:
 		challenges.RunNotebookChallenge(reader, state)
 	case "4":
 		//consumeResources(state, 24.0)
-		challenges.RunCipherChallenge()
+		challenges.RunCipherChallenge(reader, state)
 	case "5":
 		handleLegacyChallenges(reader, state)
 	case "6":

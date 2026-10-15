@@ -1,14 +1,17 @@
 package challenges
 
 import (
+	"Quest/models"
+	"Quest/utils"
+	"bufio"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"unicode"
 )
 
-func RunCipherChallenge() {
-	text := `у цьому рядку зашифрований пароль, перша буква пароля - це літера, що найчастіше
+const hintText = `у цьому рядку зашифрований пароль, перша буква пароля - це літера, що найчастіше
 зустрічається, яка буде в слові, що найчастіше зустрічається, ця літера повинна
 бути конкатенована зі словом, розташованим по середині списку слів що є в
 підказці, слова повинні бути відсортовані за зростанням частоти зустрічання,
@@ -20,8 +23,49 @@ func RunCipherChallenge() {
 відповідь. Після того як Ви отримаєте відповідь, його потрібно буде руками
 ввести в інтерфейс користувача. Не забудьте перевірити правильність введення.`
 
+func RunCipherChallenge(reader *bufio.Reader, state *models.GameState) {
+	fmt.Println("\n=== ВИПРОБУВАННЯ 4: ОЗОНОГЕНЕРАТОР ТА ПАРОЛЬ (ЗАВДАННЯ 7) ===")
+	fmt.Println("УВАГА: Озоногенератор загрожує спалити всі запаси їжі!")
+	fmt.Println("Розшифруйте підказку та введіть деактиваційний пароль.")
+	fmt.Println("\n[Текст підказки]:")
+	fmt.Println(hintText)
+
+	expectedPassword := generateDecryptedPassword(hintText)
+
+	fmt.Print("\nВведіть згенерований пароль: ")
+	userInput := strings.TrimSpace(utils.ReadString(reader))
+
+	if userInput == expectedPassword {
+		fmt.Println("\nПароль правильний! Озоногенератор безпечно деактивовано.")
+		if !state.Task7Done {
+			pointsReward := 9
+			foodReward := 3
+			waterReward := 2.0
+
+			state.Points += pointsReward
+			state.FoodMeals += foodReward
+			state.WaterLiters += waterReward
+			state.Task7Done = true
+
+			fmt.Printf("Нараховано: +%d балів!\n", pointsReward)
+			fmt.Printf("Отримано запас їжі та води на 1 день (+%d їжі, +%.1f л води)!\n", foodReward, waterReward)
+		} else {
+			fmt.Println("(Ви вже отримували нагороду за це завдання)")
+		}
+	} else {
+		fmt.Println("\nПароль неправильний!")
+		fmt.Printf("(Підказка системи: правильний пароль був \"%s\")\n", expectedPassword)
+		fmt.Println("Озоногенератор спалив запаси їжі! Залишився лише сьогоднішній раціон.")
+		if state.FoodMeals > 3 {
+			state.FoodMeals = 3
+		}
+	}
+}
+
+func generateDecryptedPassword(text string) string {
 	rawWords := strings.Fields(text)
 	wordFreq := make(map[string]int)
+
 	for _, w := range rawWords {
 		cleaned := strings.Trim(w, ".,:;\"«»-–")
 		if cleaned != "" {
@@ -29,14 +73,16 @@ func RunCipherChallenge() {
 		}
 	}
 
-	type wordCount struct {
+	type wordItem struct {
 		Word  string
 		Count int
 	}
-	var wordsList []wordCount
+
+	var wordsList []wordItem
 	for w, c := range wordFreq {
-		wordsList = append(wordsList, wordCount{Word: w, Count: c})
+		wordsList = append(wordsList, wordItem{Word: w, Count: c})
 	}
+
 	sort.Slice(wordsList, func(i, j int) bool {
 		if wordsList[i].Count == wordsList[j].Count {
 			return wordsList[i].Word < wordsList[j].Word
@@ -45,6 +91,7 @@ func RunCipherChallenge() {
 	})
 
 	midWord := wordsList[len(wordsList)/2].Word
+	maxWordFreq := wordsList[len(wordsList)-1].Count
 
 	midWordLetterFreq := make(map[rune]int)
 	for _, r := range strings.ToLower(midWord) {
@@ -57,6 +104,7 @@ func RunCipherChallenge() {
 		Letter rune
 		Count  int
 	}
+
 	var midLetters []letterItem
 	for r, c := range midWordLetterFreq {
 		midLetters = append(midLetters, letterItem{Letter: r, Count: c})
@@ -67,10 +115,7 @@ func RunCipherChallenge() {
 		}
 		return midLetters[i].Count > midLetters[j].Count
 	})
-
 	mostFreqLetterInMidWord := midLetters[0].Letter
-
-	maxWordFreq := wordsList[len(wordsList)-1].Count
 
 	allLettersFreq := make(map[rune]int)
 	for _, r := range strings.ToLower(text) {
@@ -91,24 +136,26 @@ func RunCipherChallenge() {
 		return allLetters[i].Count < allLetters[j].Count
 	})
 
-	maxLetterFreq := allLetters[len(allLetters)-1].Count // найчастіша літера у тексті
+	maxLetterFreq := allLetters[len(allLetters)-1].Count
 
-	secondRarestLetter := allLetters[1]
-
-	fmt.Printf("1. Слово з середини списку: \"%s\"\n", midWord)
-	fmt.Printf("   Найчастіша літера в ньому: '%c' (зустрічається %d раз)\n\n",
-		mostFreqLetterInMidWord, midLetters[0].Count)
-
-	fmt.Println("2. Частоти:")
-	fmt.Printf("   • Частота найчастішого слова (\"%s\"): %d\n",
-		wordsList[len(wordsList)-1].Word, maxWordFreq)
-	fmt.Printf("   • Частота найчастішої літери в тексті ('%c'): %d\n\n",
-		allLetters[len(allLetters)-1].Letter, maxLetterFreq)
-
-	fmt.Println("3. Рідкісні літери у тексті (початок списку):")
-	for i := 0; i < 5 && i < len(allLetters); i++ {
-		fmt.Printf("   [%d] '%c' : %d раз(и)\n", i, allLetters[i].Letter, allLetters[i].Count)
+	secondRarestCount := 1
+	if len(allLetters) > 1 {
+		secondRarestCount = allLetters[1].Count
 	}
-	fmt.Printf("   -> Друга за рідкістю літера: '%c' з частотою %d\n",
-		secondRarestLetter.Letter, secondRarestLetter.Count)
+
+	head := string(mostFreqLetterInMidWord) + midWord
+	numberPair := strconv.Itoa(maxWordFreq) + strconv.Itoa(maxLetterFreq)
+	tail := strings.Repeat(numberPair, secondRarestCount)
+
+	combinedString := head + tail
+
+	return reverseByRune(combinedString)
+}
+
+func reverseByRune(s string) string {
+	runes := []rune(s)
+	for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
+		runes[i], runes[j] = runes[j], runes[i]
+	}
+	return string(runes)
 }
