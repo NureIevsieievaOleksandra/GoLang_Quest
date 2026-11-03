@@ -1,6 +1,7 @@
 package challenges
 
 import (
+	"Quest/events"
 	"Quest/models"
 	"Quest/utils"
 	"bufio"
@@ -187,10 +188,11 @@ func rewardPlayer(state *models.GameState) {
 		foodReward := 10
 		waterReward := 10.0
 
-		state.Points += pointsReward
-		state.FoodMeals += foodReward
-		state.WaterLiters += waterReward
-		state.Task6Done = true
+		events.ApplyEvent(state,
+			events.AddPoints(pointsReward),
+			events.AddSupplies(models.DaySupplies{Food: foodReward, Water: waterReward}),
+			func(s *models.Survivor) { s.Task6Done = true },
+		)
 
 		fmt.Printf("\nОтримано: +%d балів, +%d їжі, +%.1f л води!\n",
 			pointsReward, foodReward, waterReward)

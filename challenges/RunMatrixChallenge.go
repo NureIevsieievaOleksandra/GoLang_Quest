@@ -1,6 +1,7 @@
 package challenges
 
 import (
+	"Quest/events"
 	"Quest/models"
 	"fmt"
 )
@@ -41,9 +42,11 @@ func RunMatrixChallenge(state *models.GameState) {
 		pointsReward := 7
 		airReward := 720.0
 
-		state.Points += pointsReward
-		state.AirHours += airReward
-		state.Task5Done = true
+		events.ApplyEvent(state,
+			events.AddPoints(pointsReward),
+			events.AddSupplies(models.DaySupplies{Air: airReward}),
+			func(s *models.Survivor) { s.Task5Done = true },
+		)
 
 		fmt.Printf("\nНараховано: +%d балів!\n", pointsReward)
 		fmt.Printf("Отримано запас повітря на місяць (+%.0f год)!\n", airReward)

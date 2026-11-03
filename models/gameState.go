@@ -15,4 +15,13 @@ type GameState struct {
 	Task5Done     bool
 	Task6Done     bool
 	Task7Done     bool
+	Task8Done     bool
+	Task9Done     bool
+
+	Journal    Journal
+	HoursLived float64
+
+	GameOver     bool
+	Won          bool
+	ExitUnlocked bool
 }

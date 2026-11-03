@@ -1,6 +1,7 @@
 package challenges
 
 import (
+	"Quest/events"
 	"Quest/models"
 	"Quest/utils"
 	"bufio"
@@ -25,10 +26,11 @@ RoundLoop:
 			waterReward := 6.0
 			pointsReward := 7
 
-			state.Points += pointsReward
-			state.FoodMeals += foodReward
-			state.WaterLiters += waterReward
-			state.Task4Done = true
+			events.ApplyEvent(state,
+				events.AddPoints(pointsReward),
+				events.AddSupplies(models.DaySupplies{Food: foodReward, Water: waterReward}),
+				func(s *models.Survivor) { s.Task4Done = true },
+			)
 
 			fmt.Printf("Нараховано: +%d балів!\n", pointsReward)
 			fmt.Printf("Отримано: %d прийомів їжі та %.1f л води!\n", foodReward, waterReward)

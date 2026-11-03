@@ -1,6 +1,7 @@
 package challenges
 
 import (
+	"Quest/events"
 	"Quest/models"
 	"Quest/utils"
 	"bufio"
@@ -42,10 +43,11 @@ func RunCipherChallenge(reader *bufio.Reader, state *models.GameState) {
 			foodReward := 3
 			waterReward := 2.0
 
-			state.Points += pointsReward
-			state.FoodMeals += foodReward
-			state.WaterLiters += waterReward
-			state.Task7Done = true
+			events.ApplyEvent(state,
+				events.AddPoints(pointsReward),
+				events.AddSupplies(models.DaySupplies{Food: foodReward, Water: waterReward}),
+				func(s *models.Survivor) { s.Task7Done = true },
+			)
 
 			fmt.Printf("Нараховано: +%d балів!\n", pointsReward)
 			fmt.Printf("Отримано запас їжі та води на 1 день (+%d їжі, +%.1f л води)!\n", foodReward, waterReward)
@@ -56,9 +58,7 @@ func RunCipherChallenge(reader *bufio.Reader, state *models.GameState) {
 		fmt.Println("\nПароль неправильний!")
 		fmt.Printf("(Підказка системи: правильний пароль був \"%s\")\n", expectedPassword)
 		fmt.Println("Озоногенератор спалив запаси їжі! Залишився лише сьогоднішній раціон.")
-		if state.FoodMeals > 3 {
-			state.FoodMeals = 3
-		}
+		events.ApplyEvent(state, events.KeepOnlyFood(3))
 	}
 }
 
