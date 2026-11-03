@@ -6,17 +6,17 @@ import (
 )
 
 type Point struct {
-	X int
-	Y int
+	x int
+	y int
 }
 
 type Node struct {
-	X         int
-	Y         int
-	DirX      int
-	DirY      int
-	StepCount int
-	Path      []Point
+	x         int
+	y         int
+	dirX      int
+	dirY      int
+	stepCount int
+	path      []Point
 }
 
 func RunMatrixChallenge(state *models.GameState) {
@@ -31,9 +31,9 @@ func RunMatrixChallenge(state *models.GameState) {
 	fmt.Println("\nБезпечний маршрут знайдено:")
 	for i, p := range path {
 		if i == len(path)-1 {
-			fmt.Printf("(%d,%d)\n", p.X, p.Y)
+			fmt.Printf("(%d,%d)\n", p.x, p.y)
 		} else {
-			fmt.Printf("(%d,%d) -> ", p.X, p.Y)
+			fmt.Printf("(%d,%d) -> ", p.x, p.y)
 		}
 	}
 
@@ -62,7 +62,7 @@ func isSafe(x, y int) bool {
 	return x%3 == 0
 }
 
-func findSafePath(targetX, targetY int) []Point {
+func findSafePath(targetx, targety int) []Point {
 	directions := [][2]int{
 		{1, 0},  // вправо
 		{0, 1},  // вниз
@@ -74,12 +74,12 @@ func findSafePath(targetX, targetY int) []Point {
 	visited := make(map[string]bool)
 
 	startNode := Node{
-		X:         0,
-		Y:         0,
-		DirX:      0,
-		DirY:      0,
-		StepCount: 0,
-		Path:      []Point{{0, 0}},
+		x:         0,
+		y:         0,
+		dirX:      0,
+		dirY:      0,
+		stepCount: 0,
+		path:      []Point{{0, 0}},
 	}
 
 	queue := []Node{startNode}
@@ -88,44 +88,44 @@ func findSafePath(targetX, targetY int) []Point {
 		curr := queue[0]
 		queue = queue[1:]
 
-		if curr.X == targetX && curr.Y == targetY {
-			return curr.Path
+		if curr.x == targetx && curr.y == targety {
+			return curr.path
 		}
 
 		for _, d := range directions {
 			dx, dy := d[0], d[1]
-			nextX, nextY := curr.X+dx, curr.Y+dy
+			nextX, nextY := curr.x+dx, curr.y+dy
 
 			if !isSafe(nextX, nextY) {
 				continue
 			}
 
-			nextStepCount := 1
-			if curr.DirX == dx && curr.DirY == dy {
-				nextStepCount = curr.StepCount + 1
+			nextstepCount := 1
+			if curr.dirX == dx && curr.dirY == dy {
+				nextstepCount = curr.stepCount + 1
 			}
 
-			if nextStepCount > 3 {
+			if nextstepCount > 3 {
 				continue
 			}
 
-			stateKey := fmt.Sprintf("%d,%d,%d,%d,%d", nextX, nextY, dx, dy, nextStepCount)
+			stateKey := fmt.Sprintf("%d,%d,%d,%d,%d", nextX, nextY, dx, dy, nextstepCount)
 			if visited[stateKey] {
 				continue
 			}
 			visited[stateKey] = true
 
-			newPath := make([]Point, len(curr.Path)+1)
-			copy(newPath, curr.Path)
-			newPath[len(curr.Path)] = Point{X: nextX, Y: nextY}
+			newpath := make([]Point, len(curr.path)+1)
+			copy(newpath, curr.path)
+			newpath[len(curr.path)] = Point{x: nextX, y: nextY}
 
 			queue = append(queue, Node{
-				X:         nextX,
-				Y:         nextY,
-				DirX:      dx,
-				DirY:      dy,
-				StepCount: nextStepCount,
-				Path:      newPath,
+				x:         nextX,
+				y:         nextY,
+				dirX:      dx,
+				dirY:      dy,
+				stepCount: nextstepCount,
+				path:      newpath,
 			})
 		}
 	}

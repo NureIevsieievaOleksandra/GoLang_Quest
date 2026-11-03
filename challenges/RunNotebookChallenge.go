@@ -9,9 +9,9 @@ import (
 )
 
 type TaskItem struct {
-	Condition string
-	Solution  string
-	SeenToday bool
+	condition string
+	solution  string
+	seenToday bool
 }
 
 var notebook []TaskItem
@@ -47,19 +47,19 @@ NotebookLoop:
 			break
 		}
 
-		duplicateIdx := findTaskByCondition(cond)
+		duplicateIdx := findTaskBycondition(cond)
 		if duplicateIdx != -1 {
 			fmt.Printf("Це завдання вже вирішувалося раніше (№%d)!\n", duplicateIdx)
-			fmt.Printf("Знайдене рішення: %s\n", notebook[duplicateIdx].Solution)
+			fmt.Printf("Знайдене рішення: %s\n", notebook[duplicateIdx].solution)
 			break
 		}
 
 		fmt.Print("Введіть рішення завдання: ")
 		sol := strings.TrimSpace(utils.ReadString(reader))
 		notebook = append(notebook, TaskItem{
-			Condition: cond,
-			Solution:  sol,
-			SeenToday: false,
+			condition: cond,
+			solution:  sol,
+			seenToday: false,
 		})
 		fmt.Println("Завдання успішно додано до записника!")
 
@@ -71,7 +71,7 @@ NotebookLoop:
 		fmt.Print("Введіть індекс завдання, що зустрілося сьогодні: ")
 		idx := int(utils.ReadFloat(reader))
 		if idx >= 0 && idx < len(notebook) {
-			notebook[idx].SeenToday = true
+			notebook[idx].seenToday = true
 			fmt.Printf("Завдання [%d] відзначено як побачене сьогодні.\n", idx)
 		} else {
 			fmt.Println("Некоректний індекс.")
@@ -81,8 +81,8 @@ NotebookLoop:
 		fmt.Println("\n--- Завдання, що НЕ зустрічалися сьогодні ---")
 		count := 0
 		for i, t := range notebook {
-			if !t.SeenToday {
-				fmt.Printf("[%d] Умова: %s | Рішення: %s\n", i, t.Condition, t.Solution)
+			if !t.seenToday {
+				fmt.Printf("[%d] Умова: %s | Рішення: %s\n", i, t.condition, t.solution)
 				count++
 			}
 		}
@@ -95,12 +95,12 @@ NotebookLoop:
 		query := strings.TrimSpace(utils.ReadString(reader))
 		found := false
 		for i, t := range notebook {
-			if strings.Contains(strings.ToLower(t.Condition), strings.ToLower(query)) {
+			if strings.Contains(strings.ToLower(t.condition), strings.ToLower(query)) {
 				status := "Сьогодні не було"
-				if t.SeenToday {
+				if t.seenToday {
 					status = "Сьогодні було"
 				}
-				fmt.Printf("[%d] %s | Рішення: %s | Статус: %s\n", i, t.Condition, t.Solution, status)
+				fmt.Printf("[%d] %s | Рішення: %s | Статус: %s\n", i, t.condition, t.solution, status)
 				found = true
 			}
 		}
@@ -133,18 +133,18 @@ NotebookLoop:
 			break
 		}
 		fmt.Println("\nПеревірка ізоляції: тимчасово змінимо перше завдання в бекапі...")
-		oldVal := backupNotebook[0].Condition
-		backupNotebook[0].Condition = "[ТЕСТ] Змінена копія"
+		oldVal := backupNotebook[0].condition
+		backupNotebook[0].condition = "[ТЕСТ] Змінена копія"
 
-		fmt.Printf("Оригінал [0]: %s\n", notebook[0].Condition)
-		fmt.Printf("Бекап    [0]: %s\n", backupNotebook[0].Condition)
+		fmt.Printf("Оригінал [0]: %s\n", notebook[0].condition)
+		fmt.Printf("Бекап    [0]: %s\n", backupNotebook[0].condition)
 
-		if notebook[0].Condition != backupNotebook[0].Condition {
+		if notebook[0].condition != backupNotebook[0].condition {
 			fmt.Println("Перевірка пройдена: копія незалежна, зміна не вплинула на оригінал!")
 		} else {
 			fmt.Println("Помилка: списки зв'язані посиланням.")
 		}
-		backupNotebook[0].Condition = oldVal
+		backupNotebook[0].condition = oldVal
 
 	case "9":
 		rewardPlayer(state)
@@ -165,16 +165,16 @@ func showTasks(list []TaskItem) {
 	fmt.Println("\n--- Список завдань у книжці ---")
 	for i, t := range list {
 		status := "не було"
-		if t.SeenToday {
+		if t.seenToday {
 			status = "Сьогодні вже було"
 		}
-		fmt.Printf("[%d] Умова: \"%s\" | Рішення: \"%s\" | [%s]\n", i, t.Condition, t.Solution, status)
+		fmt.Printf("[%d] Умова: \"%s\" | Рішення: \"%s\" | [%s]\n", i, t.condition, t.solution, status)
 	}
 }
 
-func findTaskByCondition(condition string) int {
+func findTaskBycondition(condition string) int {
 	for i, t := range notebook {
-		if strings.EqualFold(strings.TrimSpace(t.Condition), strings.TrimSpace(condition)) {
+		if strings.EqualFold(strings.TrimSpace(t.condition), strings.TrimSpace(condition)) {
 			return i
 		}
 	}
