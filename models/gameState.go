@@ -17,6 +17,7 @@ type GameState struct {
 	Task7Done     bool
 	Task8Done     bool
 	Task9Done     bool
+	Task10Done    bool
 
 	Journal    Journal
 	HoursLived float64

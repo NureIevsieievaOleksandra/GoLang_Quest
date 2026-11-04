@@ -12,11 +12,10 @@ import (
 	"strings"
 )
 
-// menuItem — пункт меню. Вибір пункту = застосування події до гравця (Завдання 9).
 type menuItem struct {
 	title string
 	event events.Event
-	back  bool // пункт «Назад» — вийти з цього меню
+	back  bool
 }
 
 func main() {
@@ -36,7 +35,6 @@ func main() {
 	fmt.Println("Єдиний спосіб вибратися — набрати щонайменше 60 балів у випробуваннях.»")
 	fmt.Println("-------------------------------------------------")
 
-	// Завдання 3 і 3* (інтерфейс) — бали та 6 л води
 	events.ApplyEvent(state,
 		events.AddPoints(3+5),
 		events.AddWater(6),
@@ -45,7 +43,6 @@ func main() {
 			s.Task3StarDone = true
 		},
 	)
-	// Завдання 9 (програму переписано на події) — бали
 	events.ApplyEvent(state,
 		events.AddPoints(9),
 		func(s *models.Survivor) { s.Task9Done = true },
@@ -66,8 +63,6 @@ func main() {
 	})
 }
 
-// runMenu — універсальне меню без циклів (через goto, як у Завданні 3*).
-// Після кожної дії перевіряється умова перемоги; меню закривається, коли гру завершено.
 func runMenu(reader *bufio.Reader, state *models.Survivor, title string, build func() []menuItem) {
 MenuLoop:
 	if state.GameOver {
@@ -102,7 +97,6 @@ func printMenuItems(items []menuItem, i int) {
 	printMenuItems(items, i+1)
 }
 
-// exitEvent — вихід: якщо набрано 60 балів, це виграшний кінець гри.
 func exitEvent(s *models.Survivor) {
 	if s.ExitUnlocked {
 		events.ApplyEvent(s, events.WinGame())
@@ -125,6 +119,8 @@ func challengeSelectMenu(reader *bufio.Reader, state *models.Survivor) {
 				event: func(s *models.Survivor) { challenges.RunCipherChallenge(reader, s) }},
 			{title: fmt.Sprintf("Випробування 5. Журнал виживання (Завдання 8) [%s]", utils.StatusStr(state.Task8Done)),
 				event: func(s *models.Survivor) { challenges.RunJournal(reader, s) }},
+			{title: fmt.Sprintf("Випробування 6. Інтерфейси (Завдання 10) [%s]", utils.StatusStr(state.Task10Done)),
+				event: func(s *models.Survivor) { challenges.RunInterfaceChallenge(s) }},
 			{title: "Інші випробування (Ім'я, Розрахунок повітря)",
 				event: func(s *models.Survivor) { handleLegacyChallenges(reader, s) }},
 			{title: "Назад", back: true},
