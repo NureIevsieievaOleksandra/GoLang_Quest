@@ -14,13 +14,13 @@ type Action interface {
 type EatAction struct{}
 
 func (a EatAction) Execute(s *models.Survivor) {
-	events.ApplyEvent(s, events.ConsumeFood(3)) // Витрачаємо 3 їжі
+	events.ApplyEvent(s, events.ConsumeFood(3))
 }
 
 type DrinkAction struct{}
 
 func (a DrinkAction) Execute(s *models.Survivor) {
-	events.ApplyEvent(s, events.ConsumeWater(5.0)) // Витрачаємо 5 води
+	events.ApplyEvent(s, events.ConsumeWater(5.0))
 }
 
 type RestAction struct{}

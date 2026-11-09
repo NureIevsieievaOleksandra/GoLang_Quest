@@ -124,8 +124,7 @@ func ConsumeAir(hours float64) Event {
 	return func(s *models.Survivor) {
 		s.AirHours = ApplyFloat(s.AirHours, hours, SubF)
 		if s.AirHours < 0 {
-			s.AirHours = 0
-			ApplyEvent(s, LoseGame("Закінчилося повітря! Ви задихнулися."))
+			panic("Закінчилося повітря! Рівень впав нижче нуля.")
 		}
 	}
 }
@@ -134,8 +133,7 @@ func ConsumeWater(liters float64) Event {
 	return func(s *models.Survivor) {
 		s.WaterLiters = ApplyFloat(s.WaterLiters, liters, SubF)
 		if s.WaterLiters < 0 {
-			s.WaterLiters = 0
-			fmt.Println("Вода закінчилася! Організм зневоднений.")
+			panic("Вода закінчилася! Рівень впав нижче нуля.")
 		}
 	}
 }
@@ -147,8 +145,7 @@ func ConsumeFood(meals int) Event {
 		}
 		s.FoodMeals = Apply(s.FoodMeals, meals, Sub)
 		if s.FoodMeals < 0 {
-			s.FoodMeals = 0
-			fmt.Println("Їжа закінчилася! Почалося голодування.")
+			panic("Їжа закінчилася! Рівень впав нижче нуля.")
 		}
 	}
 }

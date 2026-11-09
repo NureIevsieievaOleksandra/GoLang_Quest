@@ -18,6 +18,14 @@ type menuItem struct {
 	back  bool
 }
 
+type ActionWrapper struct {
+	Event events.Event
+}
+
+func (a ActionWrapper) Execute(s *models.Survivor) {
+	events.ApplyEvent(s, a.Event)
+}
+
 func main() {
 	reader := bufio.NewReader(os.Stdin)
 
@@ -54,9 +62,39 @@ func main() {
 			{title: "Випробування", event: func(s *models.Survivor) { challengeSelectMenu(reader, s) }},
 			{title: "Запаси (журнал виживання)", event: func(s *models.Survivor) { challenges.RunJournal(reader, s) }},
 			{title: "Бали", event: showScore},
-			{title: "Зробити крок / прожити час (зменшити запаси)", event: func(s *models.Survivor) {
+			{title: "Зробити крок / прожити час (безпечне виконання - Завдання 11)", event: func(s *models.Survivor) {
 				fmt.Print("Скільки годин минуло? ")
-				events.ApplyEvent(s, events.PassTime(utils.ReadFloat(reader)))
+				hours := utils.ReadFloat(reader)
+
+				if hours <= 0 {
+					fmt.Println("Час не може бути від'ємним або нульовим.")
+					return
+				}
+
+				fmt.Printf("\n--- Минуло %.1f год. Симуляція витрати запасів (Завдання 11) ---\n", hours)
+
+				waterToConsume := (2.0 / 24.0) * hours
+				foodToConsume := int(hours / 8.0)
+
+				actions := []challenges.Action{
+					ActionWrapper{Event: events.ConsumeAir(hours)},
+				}
+
+				if waterToConsume > 0 {
+					actions = append(actions, ActionWrapper{Event: events.ConsumeWater(waterToConsume)})
+				}
+				if foodToConsume > 0 {
+					actions = append(actions, ActionWrapper{Event: events.ConsumeFood(foodToConsume)})
+				}
+				challenges.ExecuteSafeActions(actions, s)
+
+				fmt.Printf("Поточний стан: Їжа=%d, Вода=%.2f, Повітря=%.1f\n", s.FoodMeals, s.WaterLiters, s.AirHours)
+
+				if !s.Task11Done {
+					s.Task11Done = true
+					events.ApplyEvent(s, events.AddPoints(7))
+					fmt.Println("\n[Система] Завдання 11 (Обробка панік та помилок) зараховано! +7 балів.")
+				}
 			}},
 			{title: "Вихід", event: exitEvent},
 		}
@@ -121,6 +159,8 @@ func challengeSelectMenu(reader *bufio.Reader, state *models.Survivor) {
 				event: func(s *models.Survivor) { challenges.RunJournal(reader, s) }},
 			{title: fmt.Sprintf("Випробування 6. Інтерфейси (Завдання 10) [%s]", utils.StatusStr(state.Task10Done)),
 				event: func(s *models.Survivor) { challenges.RunInterfaceChallenge(s) }},
+			{title: fmt.Sprintf("Випробування 7. Паніки та помилки (Завдання 11) [%s]", utils.StatusStr(state.Task11Done)),
+				event: func(s *models.Survivor) { challenges.RunErrorHandlingChallenge(s) }},
 			{title: "Інші випробування (Ім'я, Розрахунок повітря)",
 				event: func(s *models.Survivor) { handleLegacyChallenges(reader, s) }},
 			{title: "Назад", back: true},
