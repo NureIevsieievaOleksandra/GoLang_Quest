@@ -161,6 +161,8 @@ func challengeSelectMenu(reader *bufio.Reader, state *models.Survivor) {
 				event: func(s *models.Survivor) { challenges.RunInterfaceChallenge(s) }},
 			{title: fmt.Sprintf("Випробування 7. Паніки та помилки (Завдання 11) [%s]", utils.StatusStr(state.Task11Done)),
 				event: func(s *models.Survivor) { challenges.RunErrorHandlingChallenge(s) }},
+			{title: fmt.Sprintf("Випробування 8. Паралелізм (Завдання 12) [%s]", utils.StatusStr(state.Task12Done)),
+				event: func(s *models.Survivor) { challenges.RunConcurrencyChallenge(s) }},
 			{title: "Інші випробування (Ім'я, Розрахунок повітря)",
 				event: func(s *models.Survivor) { handleLegacyChallenges(reader, s) }},
 			{title: "Назад", back: true},
