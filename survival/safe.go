@@ -1,7 +1,6 @@
-package challenges
+package survival
 
 import (
-	"Quest/models"
 	"fmt"
 	"os"
 	"time"
@@ -9,7 +8,7 @@ import (
 
 var errorCounter int = 0 // Глобальний лічильник помилок
 
-func ExecuteSafeActions(actions []Action, s *models.Survivor) {
+func ExecuteSafeActions(actions []Action, s *Survivor) {
 	initialFood := s.FoodMeals
 	initialWater := s.WaterLiters
 	initialAir := s.AirHours
@@ -26,13 +25,13 @@ func ExecuteSafeActions(actions []Action, s *models.Survivor) {
 	}
 }
 
-func runWithRecovery(actions []Action, s *models.Survivor) (success bool) {
+func runWithRecovery(actions []Action, s *Survivor) (success bool) {
 	defer func() {
 		if r := recover(); r != nil {
 			errorCounter += 3
 			logMsg := fmt.Sprintf("[%s] PANIC INTERCEPTED: %v | Лічильник: %d\n", time.Now().Format(time.RFC3339), r, errorCounter)
 			fmt.Print(logMsg)
-			logErrorToFile(logMsg)
+			LogErrorToFile(logMsg)
 
 			checkFatalErrors()
 			success = false
@@ -48,7 +47,7 @@ func runWithRecovery(actions []Action, s *models.Survivor) (success bool) {
 
 			logMsg := fmt.Sprintf("[%s] ERROR: %v | Лічильник: %d\n", time.Now().Format(time.RFC3339), err, errorCounter)
 			fmt.Print(logMsg)
-			logErrorToFile(logMsg)
+			LogErrorToFile(logMsg)
 
 			checkFatalErrors()
 		}
@@ -60,12 +59,12 @@ func checkFatalErrors() {
 	if errorCounter > 5 {
 		msg := "ФАТАЛЬНО: Кількість помилок перевищила 5! Завершення програми."
 		fmt.Println("\n[КРИТИЧНО]", msg)
-		logErrorToFile(msg + "\n")
+		LogErrorToFile(msg + "\n")
 		os.Exit(1)
 	}
 }
 
-func logErrorToFile(message string) {
+func LogErrorToFile(message string) {
 	file, err := os.OpenFile("error_log.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		fmt.Println("Не вдалося відкрити файл логів:", err)

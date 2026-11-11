@@ -1,0 +1,52 @@
+{{define "title"}}Лот №{{.Data.Lot.ID}} — Аукціон ресурсів{{end}}
+{{define "content"}}
+{{$l := .Data.Lot}}
+<p><a href="/">← Усі лоти</a></p>
+<h1>{{$l.OfferAmount}} × {{res $l.OfferResource}} <span class="status {{$l.Status}}">{{status $l.Status}}</span></h1>
+<div class="grid2">
+<div class="card">
+<dl>
+<dt>Продавець</dt><dd>{{$l.SellerName}}</dd>
+<dt>Ціна в ресурсі</dt><dd>{{res $l.PriceResource}}</dd>
+<dt>Стартова ціна</dt><dd class="num">{{$l.StartPrice}}</dd>
+<dt>Поточна ставка</dt><dd class="num">{{if $l.HasBids}}{{$l.MaxBid}}{{else}}<span class="muted">ставок ще немає</span>{{end}}</dd>
+<dt>Викупна ціна</dt><dd class="num">{{if gt $l.BuyoutPrice 0}}{{$l.BuyoutPrice}}{{if eq $l.Status "active"}}{{if not (canBuyout $l.BuyoutPrice $l.MaxBid $l.HasBids)}} <span class="muted">(вже недоступна)</span>{{end}}{{end}}{{else}}<span class="muted">не передбачена</span>{{end}}</dd>
+{{if eq $l.Status "active"}}
+<dt>Завершення</dt><dd>{{time $l.EndsAt}} <span class="muted">(залишилось {{left $l.EndsAt}})</span></dd>
+{{else}}
+<dt>Завершено</dt><dd>{{time $l.EndsAt}}</dd>
+<dt>Покупець</dt><dd>{{if $l.WinnerName}}{{$l.WinnerName}} за {{$l.FinalPrice}} {{res $l.PriceResource}}{{else}}<span class="muted">немає — ресурси повернуто продавцю</span>{{end}}</dd>
+{{end}}
+</dl>
+</div>
+<div class="card">
+{{if ne $l.Status "active"}}
+<p class="muted">Аукціон завершено.</p>
+{{else if not $.User}}
+<p><a href="/login">Увійдіть</a>, щоб зробити ставку.</p>
+{{else if eq $.User.ID $l.SellerID}}
+<p class="muted">Це ваш лот. Ставки робитимуть інші учасники.</p>
+{{else}}
+<form class="stack" method="post" action="/lots/{{$l.ID}}/bid">
+<label>Ваша ставка, {{res $l.PriceResource}}<input type="number" name="amount" min="{{minBid $l.StartPrice $l.MaxBid $l.HasBids}}" value="{{minBid $l.StartPrice $l.MaxBid $l.HasBids}}" required><span class="hint">Мінімум {{minBid $l.StartPrice $l.MaxBid $l.HasBids}}. Ресурси резервуються й повертаються, якщо вашу ставку переб'ють.</span></label>
+<div><button class="btn">Зробити ставку</button></div>
+</form>
+{{if canBuyout $l.BuyoutPrice $l.MaxBid $l.HasBids}}
+<form method="post" action="/lots/{{$l.ID}}/buyout" style="margin-top:16px">
+<button class="btn secondary">Викупити зараз за {{$l.BuyoutPrice}} {{res $l.PriceResource}}</button>
+</form>
+{{end}}
+{{end}}
+</div>
+</div>
+
+<h2>Ставки</h2>
+{{with .Data.Bids}}
+<table>
+<thead><tr><th>Учасник</th><th>Ставка</th><th>Час</th></tr></thead>
+<tbody>{{range .}}<tr><td>{{.BidderName}}</td><td class="num">{{.Amount}} {{res $l.PriceResource}}</td><td class="muted">{{time .CreatedAt}}</td></tr>{{end}}</tbody>
+</table>
+{{else}}
+<div class="empty">Ставок ще немає.</div>
+{{end}}
+{{end}}

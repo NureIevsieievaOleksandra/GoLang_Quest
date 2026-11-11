@@ -2,9 +2,7 @@ package main
 
 import (
 	"Quest/challenges"
-	"Quest/events"
-	"Quest/models"
-	"Quest/utils"
+	"Quest/survival"
 	"bufio"
 	"fmt"
 	"os"
@@ -14,22 +12,22 @@ import (
 
 type menuItem struct {
 	title string
-	event events.Event
+	event survival.Event
 	back  bool
 }
 
 type ActionWrapper struct {
-	Event events.Event
+	Event survival.Event
 }
 
-func (a ActionWrapper) Execute(s *models.Survivor) {
-	events.ApplyEvent(s, a.Event)
+func (a ActionWrapper) Execute(s *survival.Survivor) {
+	survival.ApplyEvent(s, a.Event)
 }
 
 func main() {
 	reader := bufio.NewReader(os.Stdin)
 
-	state := &models.Survivor{
+	state := &survival.Survivor{
 		PlayerName:  "",
 		Points:      0,
 		AirHours:    0,
@@ -43,28 +41,32 @@ func main() {
 	fmt.Println("Єдиний спосіб вибратися — набрати щонайменше 60 балів у випробуваннях.»")
 	fmt.Println("-------------------------------------------------")
 
-	events.ApplyEvent(state,
-		events.AddPoints(3+5),
-		events.AddWater(6),
-		func(s *models.Survivor) {
+	survival.ApplyEvent(state,
+		survival.AddPoints(3+5),
+		survival.AddWater(6),
+		func(s *survival.Survivor) {
 			s.Task3Done = true
 			s.Task3StarDone = true
 		},
 	)
-	events.ApplyEvent(state,
-		events.AddPoints(9),
-		func(s *models.Survivor) { s.Task9Done = true },
+	survival.ApplyEvent(state,
+		survival.AddPoints(9),
+		func(s *survival.Survivor) { s.Task9Done = true },
+	)
+	survival.ApplyEvent(state,
+		survival.AddPoints(2),
+		func(s *survival.Survivor) { s.Task14Done = true },
 	)
 	state.EnsurePlayerInJournal()
 
 	runMenu(reader, state, "ГОЛОВНЕ МЕНЮ", func() []menuItem {
 		return []menuItem{
-			{title: "Випробування", event: func(s *models.Survivor) { challengeSelectMenu(reader, s) }},
-			{title: "Запаси (журнал виживання)", event: func(s *models.Survivor) { challenges.RunJournal(reader, s) }},
+			{title: "Випробування", event: func(s *survival.Survivor) { challengeSelectMenu(reader, s) }},
+			{title: "Запаси (журнал виживання)", event: func(s *survival.Survivor) { challenges.RunJournal(reader, s) }},
 			{title: "Бали", event: showScore},
-			{title: "Зробити крок / прожити час (безпечне виконання - Завдання 11)", event: func(s *models.Survivor) {
+			{title: "Зробити крок / прожити час (безпечне виконання - Завдання 11)", event: func(s *survival.Survivor) {
 				fmt.Print("Скільки годин минуло? ")
-				hours := utils.ReadFloat(reader)
+				hours := survival.ReadFloat(reader)
 
 				if hours <= 0 {
 					fmt.Println("Час не може бути від'ємним або нульовим.")
@@ -76,23 +78,23 @@ func main() {
 				waterToConsume := (2.0 / 24.0) * hours
 				foodToConsume := int(hours / 8.0)
 
-				actions := []challenges.Action{
-					ActionWrapper{Event: events.ConsumeAir(hours)},
+				actions := []survival.Action{
+					ActionWrapper{Event: survival.ConsumeAir(hours)},
 				}
 
 				if waterToConsume > 0 {
-					actions = append(actions, ActionWrapper{Event: events.ConsumeWater(waterToConsume)})
+					actions = append(actions, ActionWrapper{Event: survival.ConsumeWater(waterToConsume)})
 				}
 				if foodToConsume > 0 {
-					actions = append(actions, ActionWrapper{Event: events.ConsumeFood(foodToConsume)})
+					actions = append(actions, ActionWrapper{Event: survival.ConsumeFood(foodToConsume)})
 				}
-				challenges.ExecuteSafeActions(actions, s)
+				survival.ExecuteSafeActions(actions, s)
 
 				fmt.Printf("Поточний стан: Їжа=%d, Вода=%.2f, Повітря=%.1f\n", s.FoodMeals, s.WaterLiters, s.AirHours)
 
 				if !s.Task11Done {
 					s.Task11Done = true
-					events.ApplyEvent(s, events.AddPoints(7))
+					survival.ApplyEvent(s, survival.AddPoints(7))
 					fmt.Println("\n[Система] Завдання 11 (Обробка панік та помилок) зараховано! +7 балів.")
 				}
 			}},
@@ -101,7 +103,7 @@ func main() {
 	})
 }
 
-func runMenu(reader *bufio.Reader, state *models.Survivor, title string, build func() []menuItem) {
+func runMenu(reader *bufio.Reader, state *survival.Survivor, title string, build func() []menuItem) {
 MenuLoop:
 	if state.GameOver {
 		return
@@ -112,7 +114,7 @@ MenuLoop:
 	printMenuItems(items, 0)
 	fmt.Printf("Оберіть пункт (1-%d): ", len(items))
 
-	n, err := strconv.Atoi(strings.TrimSpace(utils.ReadString(reader)))
+	n, err := strconv.Atoi(strings.TrimSpace(survival.ReadString(reader)))
 	if err != nil || n < 1 || n > len(items) {
 		fmt.Printf("Невідома команда. Будь ласка, введіть число від 1 до %d.\n", len(items))
 		goto MenuLoop
@@ -122,7 +124,7 @@ MenuLoop:
 	if item.back {
 		return
 	}
-	events.ApplyEvent(state, item.event, events.CheckVictory())
+	survival.ApplyEvent(state, item.event, survival.CheckVictory())
 
 	goto MenuLoop
 }
@@ -135,72 +137,72 @@ func printMenuItems(items []menuItem, i int) {
 	printMenuItems(items, i+1)
 }
 
-func exitEvent(s *models.Survivor) {
+func exitEvent(s *survival.Survivor) {
 	if s.ExitUnlocked {
-		events.ApplyEvent(s, events.WinGame())
+		survival.ApplyEvent(s, survival.WinGame())
 		return
 	}
 	fmt.Println("\nТермінал вимкнено.")
 	s.GameOver = true
 }
 
-func challengeSelectMenu(reader *bufio.Reader, state *models.Survivor) {
+func challengeSelectMenu(reader *bufio.Reader, state *survival.Survivor) {
 	runMenu(reader, state, "ВИБІР ВИПРОБУВАННЯ", func() []menuItem {
 		return []menuItem{
-			{title: fmt.Sprintf("Випробування 1. Наближені обчислення (Завдання 4) [%s]", utils.StatusStr(state.Task4Done)),
-				event: func(s *models.Survivor) { challenges.RunRoundingChallenge(reader, s) }},
-			{title: fmt.Sprintf("Випробування 2. Матриця пасток (Завдання 5) [%s]", utils.StatusStr(state.Task5Done)),
-				event: func(s *models.Survivor) { challenges.RunMatrixChallenge(s) }},
-			{title: fmt.Sprintf("Випробування 3. Записна книжка рішень (Завдання 6) [%s]", utils.StatusStr(state.Task6Done)),
-				event: func(s *models.Survivor) { challenges.RunNotebookChallenge(reader, s) }},
-			{title: fmt.Sprintf("Випробування 4. Озоногенератор і пароль (Завдання 7) [%s]", utils.StatusStr(state.Task7Done)),
-				event: func(s *models.Survivor) { challenges.RunCipherChallenge(reader, s) }},
-			{title: fmt.Sprintf("Випробування 5. Журнал виживання (Завдання 8) [%s]", utils.StatusStr(state.Task8Done)),
-				event: func(s *models.Survivor) { challenges.RunJournal(reader, s) }},
-			{title: fmt.Sprintf("Випробування 6. Інтерфейси (Завдання 10) [%s]", utils.StatusStr(state.Task10Done)),
-				event: func(s *models.Survivor) { challenges.RunInterfaceChallenge(s) }},
-			{title: fmt.Sprintf("Випробування 7. Паніки та помилки (Завдання 11) [%s]", utils.StatusStr(state.Task11Done)),
-				event: func(s *models.Survivor) { challenges.RunErrorHandlingChallenge(s) }},
-			{title: fmt.Sprintf("Випробування 8. Паралелізм (Завдання 12) [%s]", utils.StatusStr(state.Task12Done)),
-				event: func(s *models.Survivor) { challenges.RunConcurrencyChallenge(s) }},
+			{title: fmt.Sprintf("Випробування 1. Наближені обчислення (Завдання 4) [%s]", survival.StatusStr(state.Task4Done)),
+				event: func(s *survival.Survivor) { challenges.RunRoundingChallenge(reader, s) }},
+			{title: fmt.Sprintf("Випробування 2. Матриця пасток (Завдання 5) [%s]", survival.StatusStr(state.Task5Done)),
+				event: func(s *survival.Survivor) { challenges.RunMatrixChallenge(s) }},
+			{title: fmt.Sprintf("Випробування 3. Записна книжка рішень (Завдання 6) [%s]", survival.StatusStr(state.Task6Done)),
+				event: func(s *survival.Survivor) { challenges.RunNotebookChallenge(reader, s) }},
+			{title: fmt.Sprintf("Випробування 4. Озоногенератор і пароль (Завдання 7) [%s]", survival.StatusStr(state.Task7Done)),
+				event: func(s *survival.Survivor) { challenges.RunCipherChallenge(reader, s) }},
+			{title: fmt.Sprintf("Випробування 5. Журнал виживання (Завдання 8) [%s]", survival.StatusStr(state.Task8Done)),
+				event: func(s *survival.Survivor) { challenges.RunJournal(reader, s) }},
+			{title: fmt.Sprintf("Випробування 6. Інтерфейси (Завдання 10) [%s]", survival.StatusStr(state.Task10Done)),
+				event: func(s *survival.Survivor) { challenges.RunInterfaceChallenge(s) }},
+			{title: fmt.Sprintf("Випробування 7. Паніки та помилки (Завдання 11) [%s]", survival.StatusStr(state.Task11Done)),
+				event: func(s *survival.Survivor) { challenges.RunErrorHandlingChallenge(s) }},
+			{title: fmt.Sprintf("Випробування 8. Паралелізм (Завдання 12) [%s]", survival.StatusStr(state.Task12Done)),
+				event: func(s *survival.Survivor) { challenges.RunConcurrencyChallenge(s) }},
 			{title: "Інші випробування (Ім'я, Розрахунок повітря)",
-				event: func(s *models.Survivor) { handleLegacyChallenges(reader, s) }},
+				event: func(s *survival.Survivor) { handleLegacyChallenges(reader, s) }},
 			{title: "Назад", back: true},
 		}
 	})
 }
 
-func handleLegacyChallenges(reader *bufio.Reader, state *models.Survivor) {
+func handleLegacyChallenges(reader *bufio.Reader, state *survival.Survivor) {
 	runMenu(reader, state, "СПИСОК ВИПРОБУВАНЬ", func() []menuItem {
 		return []menuItem{
-			{title: fmt.Sprintf("Завдання 1: Ввести ім'я [%s]", utils.StatusStr(state.Task1Done)),
-				event: func(s *models.Survivor) { enterNameTask(reader, s) }},
-			{title: fmt.Sprintf("Завдання 2: Розрахунок повітря кімнати [%s]", utils.StatusStr(state.Task2Done)),
+			{title: fmt.Sprintf("Завдання 1: Ввести ім'я [%s]", survival.StatusStr(state.Task1Done)),
+				event: func(s *survival.Survivor) { enterNameTask(reader, s) }},
+			{title: fmt.Sprintf("Завдання 2: Розрахунок повітря кімнати [%s]", survival.StatusStr(state.Task2Done)),
 				event: roomAirTask},
 			{title: "Назад", back: true},
 		}
 	})
 }
 
-func enterNameTask(reader *bufio.Reader, s *models.Survivor) {
+func enterNameTask(reader *bufio.Reader, s *survival.Survivor) {
 	if s.Task1Done {
 		fmt.Printf("Ім'я вже встановлено: %s\n", s.PlayerName)
 		return
 	}
 	fmt.Print("Введіть ваше ім'я: ")
-	name := strings.TrimSpace(utils.ReadString(reader))
-	events.ApplyEvent(s,
-		func(s *models.Survivor) {
+	name := strings.TrimSpace(survival.ReadString(reader))
+	survival.ApplyEvent(s,
+		func(s *survival.Survivor) {
 			s.PlayerName = name
 			s.Task1Done = true
 		},
-		events.AddPoints(1),
+		survival.AddPoints(1),
 	)
 	s.EnsurePlayerInJournal()
 	fmt.Printf("Ім'я збережено: %s \n", s.PlayerName)
 }
 
-func roomAirTask(s *models.Survivor) {
+func roomAirTask(s *survival.Survivor) {
 	volume := 3.0 * 4.0 * 2.0
 	hours := volume / 1.0
 	fmt.Println("\n[Розрахунок запасів повітря кімнати]")
@@ -212,15 +214,15 @@ func roomAirTask(s *models.Survivor) {
 		fmt.Println("(Ви вже отримали бали та бонус за це завдання, але можете переглядати розрахунок повторно)")
 		return
 	}
-	events.ApplyEvent(s,
-		events.AddPoints(1+2),
-		events.AddAir(hours+24.0),
-		func(s *models.Survivor) { s.Task2Done = true },
+	survival.ApplyEvent(s,
+		survival.AddPoints(1+2),
+		survival.AddAir(hours+24.0),
+		func(s *survival.Survivor) { s.Task2Done = true },
 	)
 	fmt.Println("Вірно! Нараховано +3 бали (Завдання 2 та 2*) і надано бонусний запас повітря на 24 години.")
 }
 
-func showScore(state *models.Survivor) {
+func showScore(state *survival.Survivor) {
 	fmt.Println("\n========== СТАТУС БАЛІВ ==========")
 	if state.PlayerName != "" {
 		fmt.Printf("Гравець: %s\n", state.PlayerName)

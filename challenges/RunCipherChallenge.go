@@ -1,9 +1,7 @@
 package challenges
 
 import (
-	"Quest/events"
-	"Quest/models"
-	"Quest/utils"
+	"Quest/survival"
 	"bufio"
 	"fmt"
 	"sort"
@@ -24,7 +22,7 @@ const hintText = `у цьому рядку зашифрований пароль
 відповідь. Після того як Ви отримаєте відповідь, його потрібно буде руками
 ввести в інтерфейс користувача. Не забудьте перевірити правильність введення.`
 
-func RunCipherChallenge(reader *bufio.Reader, state *models.GameState) {
+func RunCipherChallenge(reader *bufio.Reader, state *survival.GameState) {
 	fmt.Println("\n=== ВИПРОБУВАННЯ 4: ОЗОНОГЕНЕРАТОР ТА ПАРОЛЬ (ЗАВДАННЯ 7) ===")
 	fmt.Println("УВАГА: Озоногенератор загрожує спалити всі запаси їжі!")
 	fmt.Println("Розшифруйте підказку та введіть деактиваційний пароль.")
@@ -34,7 +32,7 @@ func RunCipherChallenge(reader *bufio.Reader, state *models.GameState) {
 	expectedPassword := generateDecryptedPassword(hintText)
 
 	fmt.Print("\nВведіть згенерований пароль: ")
-	userInput := strings.TrimSpace(utils.ReadString(reader))
+	userInput := strings.TrimSpace(survival.ReadString(reader))
 
 	if userInput == expectedPassword {
 		fmt.Println("\nПароль правильний! Озоногенератор безпечно деактивовано.")
@@ -43,10 +41,10 @@ func RunCipherChallenge(reader *bufio.Reader, state *models.GameState) {
 			foodReward := 3
 			waterReward := 2.0
 
-			events.ApplyEvent(state,
-				events.AddPoints(pointsReward),
-				events.AddSupplies(models.DaySupplies{Food: foodReward, Water: waterReward}),
-				func(s *models.Survivor) { s.Task7Done = true },
+			survival.ApplyEvent(state,
+				survival.AddPoints(pointsReward),
+				survival.AddSupplies(survival.DaySupplies{Food: foodReward, Water: waterReward}),
+				func(s *survival.Survivor) { s.Task7Done = true },
 			)
 
 			fmt.Printf("Нараховано: +%d балів!\n", pointsReward)
@@ -58,7 +56,7 @@ func RunCipherChallenge(reader *bufio.Reader, state *models.GameState) {
 		fmt.Println("\nПароль неправильний!")
 		fmt.Printf("(Підказка системи: правильний пароль був \"%s\")\n", expectedPassword)
 		fmt.Println("Озоногенератор спалив запаси їжі! Залишився лише сьогоднішній раціон.")
-		events.ApplyEvent(state, events.KeepOnlyFood(3))
+		survival.ApplyEvent(state, survival.KeepOnlyFood(3))
 	}
 }
 

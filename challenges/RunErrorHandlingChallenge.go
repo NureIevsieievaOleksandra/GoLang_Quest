@@ -1,7 +1,7 @@
 package challenges
 
 import (
-	"Quest/models"
+	"Quest/survival"
 	"fmt"
 	"os"
 	"time"
@@ -13,24 +13,24 @@ type RiskyAction struct {
 	AirDelta   float64
 }
 
-func (a RiskyAction) Execute(s *models.Survivor) {
+func (a RiskyAction) Execute(s *survival.Survivor) {
 	s.FoodMeals += a.FoodDelta
 	s.WaterLiters += a.WaterDelta
 	s.AirHours += a.AirDelta
 }
 
-func RunErrorHandlingChallenge(state *models.Survivor) {
+func RunErrorHandlingChallenge(state *survival.Survivor) {
 	fmt.Println("\n=== ВИПРОБУВАННЯ 7: ПАНІКИ ТА ПОМИЛКИ (ЗАВДАННЯ 11) ===")
 
 	initialFood := state.FoodMeals
 	initialWater := state.WaterLiters
 	initialAir := state.AirHours
 
-	actions := []Action{
+	actions := []survival.Action{
 		RiskyAction{FoodDelta: -state.FoodMeals + 1, WaterDelta: 0, AirDelta: 0},     // Залишить 1 їжу
 		RiskyAction{FoodDelta: 0, WaterDelta: -state.WaterLiters + 1.0, AirDelta: 0}, // Залишить 1 воду
 		RiskyAction{FoodDelta: -5, WaterDelta: 0, AirDelta: 0},                       // Опустить їжу нижче 0
-		EatAction{},
+		survival.EatAction{},
 	}
 
 	errorCount := 0
@@ -38,7 +38,7 @@ func RunErrorHandlingChallenge(state *models.Survivor) {
 	for {
 		if errorCount > 5 {
 			fmt.Println("[КРИТИЧНО] Кількість помилок перевищила 5! Завершення програми.")
-			logErrorToFile("ФАТАЛЬНО: Перевищено ліміт помилок. Програму зупинено.")
+			survival.LogErrorToFile("ФАТАЛЬНО: Перевищено ліміт помилок. Програму зупинено.")
 			os.Exit(1)
 		}
 
@@ -61,13 +61,13 @@ func RunErrorHandlingChallenge(state *models.Survivor) {
 	}
 }
 
-func executeWithRecovery(actions []Action, s *models.Survivor, errCount *int) (success bool) {
+func executeWithRecovery(actions []survival.Action, s *survival.Survivor, errCount *int) (success bool) {
 	defer func() {
 		if r := recover(); r != nil {
 			*errCount += 3
 			logMsg := fmt.Sprintf("[%s] PANIC INTERCEPTED: %v | Лічильник помилок: %d\n", time.Now().Format(time.RFC3339), r, *errCount)
 			fmt.Print(logMsg)
-			logErrorToFile(logMsg)
+			survival.LogErrorToFile(logMsg)
 			success = false
 		}
 	}()
@@ -85,7 +85,7 @@ func executeWithRecovery(actions []Action, s *models.Survivor, errCount *int) (s
 			*errCount += 1
 			logMsg := fmt.Sprintf("[%s] ERROR: %v | Лічильник помилок: %d\n", time.Now().Format(time.RFC3339), err, *errCount)
 			fmt.Print(logMsg)
-			logErrorToFile(logMsg)
+			survival.LogErrorToFile(logMsg)
 
 			if *errCount > 5 {
 				return true

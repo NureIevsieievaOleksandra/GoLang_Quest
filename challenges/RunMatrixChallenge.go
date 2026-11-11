@@ -1,8 +1,7 @@
 package challenges
 
 import (
-	"Quest/events"
-	"Quest/models"
+	"Quest/survival"
 	"fmt"
 )
 
@@ -20,7 +19,7 @@ type Node struct {
 	path      []Point
 }
 
-func RunMatrixChallenge(state *models.GameState) {
+func RunMatrixChallenge(state *survival.GameState) {
 	fmt.Println("\n=== ВИПРОБУВАННЯ 2: МАТРИЦЯ ПАСТОК ===")
 
 	path := findSafePath(10, 10)
@@ -42,10 +41,10 @@ func RunMatrixChallenge(state *models.GameState) {
 		pointsReward := 7
 		airReward := 720.0
 
-		events.ApplyEvent(state,
-			events.AddPoints(pointsReward),
-			events.AddSupplies(models.DaySupplies{Air: airReward}),
-			func(s *models.Survivor) { s.Task5Done = true },
+		survival.ApplyEvent(state,
+			survival.AddPoints(pointsReward),
+			survival.AddSupplies(survival.DaySupplies{Air: airReward}),
+			func(s *survival.Survivor) { s.Task5Done = true },
 		)
 
 		fmt.Printf("\nНараховано: +%d балів!\n", pointsReward)

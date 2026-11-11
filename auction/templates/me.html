@@ -1,0 +1,39 @@
+{{define "title"}}Кабінет — Аукціон ресурсів{{end}}
+{{define "content"}}
+<h1>Кабінет: {{.User.Name}}</h1>
+<div class="card">
+<p class="muted" style="margin-top:0">{{.User.Email}}</p>
+<div class="chips"><span class="chip{{if lt .Data.Balance.Food 5}} low{{end}}">{{res "food"}}: {{.Data.Balance.Food}}</span><span class="chip{{if lt .Data.Balance.Water 5}} low{{end}}">{{res "water"}}: {{.Data.Balance.Water}}</span><span class="chip{{if lt .Data.Balance.Air 5}} low{{end}}">{{res "air"}}: {{.Data.Balance.Air}}</span></div>
+<p class="muted" style="margin-bottom:0">Ресурси, зарезервовані в лотах і ставках, сюди не входять.</p>
+</div>
+
+<h2>Мої лоти</h2>
+{{with .Data.MyLots}}
+<table>
+<thead><tr><th>Лот</th><th>Статус</th><th>Ставка / ціна</th><th class="hide-sm">Покупець</th></tr></thead>
+<tbody>{{range .}}<tr>
+<td><a href="/lots/{{.ID}}">{{.OfferAmount}} × {{res .OfferResource}}</a></td>
+<td><span class="status {{.Status}}">{{status .Status}}</span></td>
+<td class="num">{{if .FinalPrice}}{{.FinalPrice}}{{else if .HasBids}}{{.MaxBid}}{{else}}<span class="muted">—</span>{{end}} {{res .PriceResource}}</td>
+<td class="hide-sm">{{if .WinnerName}}{{.WinnerName}}{{else}}<span class="muted">—</span>{{end}}</td>
+</tr>{{end}}</tbody>
+</table>
+{{else}}
+<div class="empty">Ви ще не виставляли лотів. <a href="/lots/new">Виставити</a></div>
+{{end}}
+
+<h2>Лоти з моїми ставками</h2>
+{{with .Data.MyBids}}
+<table>
+<thead><tr><th>Лот</th><th>Статус</th><th>Найбільша ставка</th><th>Лідер / покупець</th></tr></thead>
+<tbody>{{range .}}<tr>
+<td><a href="/lots/{{.ID}}">{{.OfferAmount}} × {{res .OfferResource}}</a></td>
+<td><span class="status {{.Status}}">{{status .Status}}</span></td>
+<td class="num">{{if .FinalPrice}}{{.FinalPrice}}{{else}}{{.MaxBid}}{{end}} {{res .PriceResource}}</td>
+<td>{{if .WinnerName}}{{.WinnerName}}{{else if eq .LeaderID $.User.ID}}<b>ви</b>{{else}}інший учасник{{end}}</td>
+</tr>{{end}}</tbody>
+</table>
+{{else}}
+<div class="empty">Ви ще не робили ставок.</div>
+{{end}}
+{{end}}

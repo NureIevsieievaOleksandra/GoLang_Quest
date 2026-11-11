@@ -1,0 +1,22 @@
+{{define "title"}}Новий лот — Аукціон ресурсів{{end}}
+{{define "content"}}
+<h1>Виставити лот</h1>
+<div class="card">
+<form class="stack" method="post" action="/lots">
+<div class="row">
+<label>Пропоную<select name="offer_resource">{{range resources}}<option value="{{.}}" {{if eq ($.Form.Get "offer_resource") .}}selected{{end}}>{{res .}}</option>{{end}}</select></label>
+<label>Кількість<input type="number" name="offer_amount" min="1" value="{{.Form.Get "offer_amount"}}" required></label>
+</div>
+<div class="row">
+<label>Ціна в ресурсі<select name="price_resource">{{range resources}}<option value="{{.}}" {{if eq ($.Form.Get "price_resource") .}}selected{{end}}>{{res .}}</option>{{end}}</select></label>
+<label>Стартова ціна<input type="number" name="start_price" min="1" value="{{.Form.Get "start_price"}}" required></label>
+</div>
+<div class="row">
+<label>Викупна ціна<input type="number" name="buyout_price" min="1" value="{{.Form.Get "buyout_price"}}"><span class="hint">Необов'язково. Діє, поки найбільша ставка не перевищить половину викупної ціни.</span></label>
+<label>Тривалість, хв<input type="number" name="duration" min="1" max="10080" value="{{.Form.Get "duration"}}" required></label>
+</div>
+<p class="muted">Ресурси лота резервуються одразу. Якщо ставок не буде, вони повернуться вам після завершення аукціону.</p>
+<div><button class="btn">Виставити</button></div>
+</form>
+</div>
+{{end}}

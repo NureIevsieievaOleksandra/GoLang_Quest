@@ -1,21 +1,18 @@
 package challenges
 
 import (
-	"Quest/events"
-	"Quest/models"
+	"Quest/survival"
 	"fmt"
 	"math/rand"
-	"os"
-	"strings"
 	"sync"
 	"time"
 )
 
 type actionWrapper struct {
-	Event events.Event
+	Event survival.Event
 }
 
-func (a actionWrapper) Execute(s *models.Survivor) {
+func (a actionWrapper) Execute(s *survival.Survivor) {
 	if a.Event != nil {
 		a.Event(s)
 	}
@@ -34,12 +31,12 @@ func logMessage(format string, a ...interface{}) {
 	logMu.Unlock()
 }
 
-func RunConcurrencyChallenge(state *models.Survivor) {
+func RunConcurrencyChallenge(state *survival.Survivor) {
 	logMessage("\n=== ВИПРОБУВАННЯ 12 ТА 13: ПАРАЛЕЛІЗМ І ФАЙЛИ ===\n")
 	logMessage("Запуск горутин... Для успішного завершення симуляція триватиме до вичерпання одного з ресурсів.\n")
 
-	eventStream := make(chan events.Event, 10)
-	actionStream := make(chan Action, 10)
+	eventStream := make(chan survival.Event, 10)
+	actionStream := make(chan survival.Action, 10)
 	done := make(chan struct{})
 
 	var wg sync.WaitGroup
@@ -124,7 +121,11 @@ func RunConcurrencyChallenge(state *models.Survivor) {
 
 	logMessage("\nСимуляцію реального часу завершено. Ресурс вичерпано.\n")
 
-	updateLogFile("quest_simulation.log", int(state.HoursLived))
+	logMu.Lock()
+	runLogs := currentRunLogs
+	currentRunLogs = ""
+	logMu.Unlock()
+	survival.UpdateLogFile("quest_simulation.log", int(state.HoursLived), runLogs)
 
 	state.FoodMeals = originalFood
 	state.WaterLiters = originalWater
@@ -142,7 +143,7 @@ func RunConcurrencyChallenge(state *models.Survivor) {
 	}
 }
 
-func eventWorker(id int, stream <-chan events.Event, s *models.Survivor, done chan struct{}, wg *sync.WaitGroup) {
+func eventWorker(id int, stream <-chan survival.Event, s *survival.Survivor, done chan struct{}, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for {
 		select {
@@ -154,7 +155,7 @@ func eventWorker(id int, stream <-chan events.Event, s *models.Survivor, done ch
 	}
 }
 
-func actionWorker(id int, stream <-chan Action, s *models.Survivor, done chan struct{}, wg *sync.WaitGroup) {
+func actionWorker(id int, stream <-chan survival.Action, s *survival.Survivor, done chan struct{}, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for {
 		select {
@@ -166,7 +167,7 @@ func actionWorker(id int, stream <-chan Action, s *models.Survivor, done chan st
 	}
 }
 
-func safeExecuteEvent(ev events.Event, s *models.Survivor, done chan struct{}) {
+func safeExecuteEvent(ev survival.Event, s *survival.Survivor, done chan struct{}) {
 	stateMu.Lock()
 	defer stateMu.Unlock()
 
@@ -184,7 +185,7 @@ func safeExecuteEvent(ev events.Event, s *models.Survivor, done chan struct{}) {
 	checkGameOver(s, done)
 }
 
-func safeExecuteAction(act Action, s *models.Survivor, done chan struct{}) {
+func safeExecuteAction(act survival.Action, s *survival.Survivor, done chan struct{}) {
 	stateMu.Lock()
 	defer stateMu.Unlock()
 
@@ -202,7 +203,7 @@ func safeExecuteAction(act Action, s *models.Survivor, done chan struct{}) {
 	checkGameOver(s, done)
 }
 
-func checkGameOver(s *models.Survivor, done chan struct{}) {
+func checkGameOver(s *survival.Survivor, done chan struct{}) {
 	if s.FoodMeals <= 0 || s.WaterLiters <= 0 || s.AirHours <= 0 {
 		select {
 		case <-done:
@@ -212,88 +213,32 @@ func checkGameOver(s *models.Survivor, done chan struct{}) {
 	}
 }
 
-func generateRandomEvent() events.Event {
+func generateRandomEvent() survival.Event {
 	r := rand.Intn(6)
 	switch r {
 	case 0:
-		return events.AddFood(1)
+		return survival.AddFood(1)
 	case 1:
-		return events.AddWater(1.0)
+		return survival.AddWater(1.0)
 	case 2:
-		return events.AddAir(1.0)
+		return survival.AddAir(1.0)
 	case 3:
-		return func(s *models.Survivor) { AirLeakEvent{}.Trigger(s, 1) }
+		return func(s *survival.Survivor) { survival.AirLeakEvent{}.Trigger(s, 1) }
 	case 4:
-		return func(s *models.Survivor) { WaterLossEvent{}.Trigger(s, 1) }
+		return func(s *survival.Survivor) { survival.WaterLossEvent{}.Trigger(s, 1) }
 	default:
-		return func(s *models.Survivor) { FoodSpoiledEvent{}.Trigger(s, 1) }
+		return func(s *survival.Survivor) { survival.FoodSpoiledEvent{}.Trigger(s, 1) }
 	}
 }
 
-func generateRandomAction() Action {
+func generateRandomAction() survival.Action {
 	r := rand.Intn(3)
 	switch r {
 	case 0:
-		return EatAction{}
+		return survival.EatAction{}
 	case 1:
-		return DrinkAction{}
+		return survival.DrinkAction{}
 	default:
-		return actionWrapper{Event: events.ConsumeAir(1.0)}
+		return actionWrapper{Event: survival.ConsumeAir(1.0)}
 	}
-}
-
-func updateLogFile(filename string, currentTicks int) {
-	var totalRuns, minTicks, maxTicks, totalTicksSum int
-
-	minTicks = currentTicks
-	maxTicks = currentTicks
-
-	content, err := os.ReadFile(filename)
-	oldLogs := ""
-
-	if err == nil {
-		lines := strings.Split(string(content), "\n")
-		if len(lines) >= 4 && strings.HasPrefix(lines[0], "--- СТАТИСТИКА") {
-			fmt.Sscanf(lines[1], "Всього запусків: %d", &totalRuns)
-			fmt.Sscanf(lines[2], "Найкоротша гра: %d", &minTicks)
-			fmt.Sscanf(lines[3], "Найдовша гра: %d", &maxTicks)
-			fmt.Sscanf(lines[4], "Середня кількість тактів: %d", &totalTicksSum)
-
-			totalTicksSum = totalTicksSum * totalRuns
-
-			if len(lines) > 6 {
-				oldLogs = strings.Join(lines[6:], "\n")
-			}
-		}
-	}
-
-	totalRuns++
-	totalTicksSum += currentTicks
-	if currentTicks < minTicks || minTicks == 0 {
-		minTicks = currentTicks
-	}
-	if currentTicks > maxTicks {
-		maxTicks = currentTicks
-	}
-	avgTicks := totalTicksSum / totalRuns
-
-	statsHeader := fmt.Sprintf("--- СТАТИСТИКА ---\nВсього запусків: %d\nНайкоротша гра: %d\nНайдовша гра: %d\nСередня кількість тактів: %d\n------------------\n\n",
-		totalRuns, minTicks, maxTicks, avgTicks)
-
-	file, err := os.Create(filename)
-	if err != nil {
-		fmt.Println("Помилка створення файлу логу:", err)
-		return
-	}
-	defer file.Close()
-
-	file.WriteString(statsHeader)
-	file.WriteString(fmt.Sprintf("=== ЗАПУСК %s ===\n", time.Now().Format("2006-01-02 15:04:05")))
-
-	logMu.Lock()
-	file.WriteString(currentRunLogs)
-	currentRunLogs = ""
-	logMu.Unlock()
-
-	file.WriteString("\n" + oldLogs)
 }

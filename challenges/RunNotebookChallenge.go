@@ -1,9 +1,7 @@
 package challenges
 
 import (
-	"Quest/events"
-	"Quest/models"
-	"Quest/utils"
+	"Quest/survival"
 	"bufio"
 	"fmt"
 	"strings"
@@ -18,7 +16,7 @@ type TaskItem struct {
 var notebook []TaskItem
 var backupNotebook []TaskItem
 
-func RunNotebookChallenge(reader *bufio.Reader, state *models.GameState) {
+func RunNotebookChallenge(reader *bufio.Reader, state *survival.GameState) {
 	fmt.Println("\n=== ВИПРОБУВАННЯ 3: ПРОГРАМНИЙ ЗАПИСНИК ===")
 
 NotebookLoop:
@@ -34,7 +32,7 @@ NotebookLoop:
 	fmt.Println("9. Завершити роботу з записником (Зарахувати бали)")
 	fmt.Print("Оберіть дію (1-9): ")
 
-	choice := strings.TrimSpace(utils.ReadString(reader))
+	choice := strings.TrimSpace(survival.ReadString(reader))
 
 	switch choice {
 	case "1":
@@ -42,7 +40,7 @@ NotebookLoop:
 
 	case "2":
 		fmt.Print("Введіть умову нового завдання: ")
-		cond := strings.TrimSpace(utils.ReadString(reader))
+		cond := strings.TrimSpace(survival.ReadString(reader))
 		if cond == "" {
 			fmt.Println("Умова не може бути порожньою.")
 			break
@@ -56,7 +54,7 @@ NotebookLoop:
 		}
 
 		fmt.Print("Введіть рішення завдання: ")
-		sol := strings.TrimSpace(utils.ReadString(reader))
+		sol := strings.TrimSpace(survival.ReadString(reader))
 		notebook = append(notebook, TaskItem{
 			condition: cond,
 			solution:  sol,
@@ -70,7 +68,7 @@ NotebookLoop:
 			break
 		}
 		fmt.Print("Введіть індекс завдання, що зустрілося сьогодні: ")
-		idx := int(utils.ReadFloat(reader))
+		idx := int(survival.ReadFloat(reader))
 		if idx >= 0 && idx < len(notebook) {
 			notebook[idx].seenToday = true
 			fmt.Printf("Завдання [%d] відзначено як побачене сьогодні.\n", idx)
@@ -93,7 +91,7 @@ NotebookLoop:
 
 	case "5":
 		fmt.Print("Введіть фрагмент умови для пошуку: ")
-		query := strings.TrimSpace(utils.ReadString(reader))
+		query := strings.TrimSpace(survival.ReadString(reader))
 		found := false
 		for i, t := range notebook {
 			if strings.Contains(strings.ToLower(t.condition), strings.ToLower(query)) {
@@ -115,7 +113,7 @@ NotebookLoop:
 			break
 		}
 		fmt.Print("Введіть номер завдання для видалення: ")
-		idx := int(utils.ReadFloat(reader))
+		idx := int(survival.ReadFloat(reader))
 		if idx >= 0 && idx < len(notebook) {
 			notebook = append(notebook[:idx], notebook[idx+1:]...)
 			fmt.Println("Завдання успішно видалено.")
@@ -182,16 +180,16 @@ func findTaskBycondition(condition string) int {
 	return -1
 }
 
-func rewardPlayer(state *models.GameState) {
+func rewardPlayer(state *survival.GameState) {
 	if !state.Task6Done {
 		pointsReward := 10
 		foodReward := 10
 		waterReward := 10.0
 
-		events.ApplyEvent(state,
-			events.AddPoints(pointsReward),
-			events.AddSupplies(models.DaySupplies{Food: foodReward, Water: waterReward}),
-			func(s *models.Survivor) { s.Task6Done = true },
+		survival.ApplyEvent(state,
+			survival.AddPoints(pointsReward),
+			survival.AddSupplies(survival.DaySupplies{Food: foodReward, Water: waterReward}),
+			func(s *survival.Survivor) { s.Task6Done = true },
 		)
 
 		fmt.Printf("\nОтримано: +%d балів, +%d їжі, +%.1f л води!\n",

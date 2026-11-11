@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{block "title" .}}Аукціон ресурсів{{end}}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0c0a;--card:#13140f;--card2:#191a14;--ink:#d3cdbc;--muted:#857e6f;--line:#2c2c25;--blood:#b8322a;--blood-hi:#e0483b;--hazard:#d9a520;--ok:#7fa36b;--field:#0e0f0b}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% -10%,#1d1e17 0%,var(--bg) 60%) fixed;color:var(--ink);font:15px/1.6 "IBM Plex Mono",ui-monospace,Consolas,monospace}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:10;background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0,rgba(0,0,0,.18) 1px,transparent 1px,transparent 3px);mix-blend-mode:multiply}
+a{color:var(--hazard)}
+a:hover{color:#f0c040}
+header{background:#060705;border-bottom:1px solid #000}
+header::after{content:"";display:block;height:6px;background:repeating-linear-gradient(-45deg,var(--hazard) 0 12px,#111 12px 24px);opacity:.85}
+header .wrap{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:center;justify-content:space-between;padding:14px 20px}
+header a{color:var(--ink);text-decoration:none}
+header nav a:hover{color:var(--blood-hi)}
+.brand{display:grid;line-height:1.1}
+.brand b{font:700 22px/1 Oswald,Impact,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#ece6d4}
+.brand small{font-size:11px;letter-spacing:.18em;color:var(--blood-hi);text-transform:uppercase;margin-top:4px}
+nav{display:flex;flex-wrap:wrap;gap:16px;align-items:center;font-size:14px;text-transform:uppercase;letter-spacing:.06em}
+nav form{margin:0}
+nav button{background:none;border:1px solid #4a463c;color:var(--ink);padding:4px 10px;cursor:pointer;font:inherit;letter-spacing:inherit;text-transform:inherit}
+nav button:hover{border-color:var(--blood-hi);color:var(--blood-hi)}
+.wrap{max-width:1040px;margin:0 auto;padding:28px 20px}
+h1,h2{font-family:Oswald,Impact,sans-serif;text-transform:uppercase;letter-spacing:.06em;color:#ece6d4}
+h1{font-size:30px;margin:0 0 8px;font-weight:700}
+h2{font-size:20px;margin:34px 0 12px;font-weight:500;border-left:4px solid var(--blood);padding-left:10px}
+.lead{color:var(--muted);margin:0 0 20px}
+.card{background:var(--card);border:1px solid var(--line);padding:20px 22px;box-shadow:inset 0 0 0 1px #000,0 8px 24px rgba(0,0,0,.5)}
+.flash{padding:10px 14px;margin-bottom:18px;border:1px solid var(--line);border-left-width:4px;background:var(--card)}
+.flash.ok{border-left-color:var(--ok);color:#b9d4a8}
+.flash.err{border-left-color:var(--blood-hi);color:#f0a59c;background:#1d100e}
+.flash.err::before{content:"УВАГА: ";font-weight:600;color:var(--blood-hi)}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line)}
+th,td{text-align:left;padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);background:#0f100c;font-weight:600}
+tbody tr:hover{background:var(--card2)}
+tr:last-child td{border-bottom:none}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid #3a372f;padding:2px 9px;font-size:13px;color:var(--ink);background:#0f100c;text-transform:none;letter-spacing:0}
+.chip.low{border-color:var(--blood-hi);color:var(--blood-hi);animation:pulse 1.6s ease-in-out infinite}
+form.stack{display:grid;gap:16px;max-width:520px}
+label{display:grid;gap:5px;font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:#bdb7a6}
+input,select{font:inherit;font-size:15px;text-transform:none;letter-spacing:0;padding:9px 11px;border:1px solid #3a3a32;background:var(--field);color:var(--ink);width:100%;border-radius:0}
+input:focus,select:focus{outline:2px solid var(--blood);outline-offset:0;border-color:var(--blood)}
+fieldset{border:1px dashed #4a463c;padding:14px 16px 16px;margin:0}
+fieldset .hint{margin-bottom:12px}
+legend{font:500 15px Oswald,Impact,sans-serif;text-transform:uppercase;letter-spacing:.08em;color:var(--hazard);padding:0 6px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.btn{display:inline-block;background:var(--blood);color:#fff4ee;border:1px solid #000;padding:10px 18px;font:600 14px "IBM Plex Mono",monospace;text-transform:uppercase;letter-spacing:.08em;cursor:pointer;text-decoration:none;box-shadow:0 0 0 1px #5a1a15 inset}
+.btn:hover{background:var(--blood-hi)}
+.btn.secondary{background:transparent;color:var(--hazard);border:1px solid var(--hazard);box-shadow:none}
+.btn.secondary:hover{background:var(--hazard);color:#111}
+.hint{font-size:12px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;margin:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.status{font-size:12px;padding:2px 8px;border:1px solid #3a372f;white-space:nowrap;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);vertical-align:middle;font-family:"IBM Plex Mono",monospace}
+.status.active{border-color:var(--blood);color:var(--blood-hi)}
+.status.active::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--blood-hi);margin-right:6px;vertical-align:1px;animation:pulse 1.2s ease-in-out infinite}
+dl{display:grid;grid-template-columns:auto 1fr;gap:7px 18px;margin:0}
+dt{color:var(--muted)}
+dd{margin:0}
+.empty{padding:22px;text-align:center;color:var(--muted);background:repeating-linear-gradient(-45deg,transparent 0 14px,rgba(255,255,255,.015) 14px 28px),var(--card);border:1px dashed #3a372f}
+footer{max-width:1040px;margin:0 auto;padding:10px 20px 30px;color:#6a655a;font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+@keyframes pulse{50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){.chip.low,.status.active::before{animation:none}}
+@media (max-width:700px){.grid2,.row,.row3{grid-template-columns:1fr}.hide-sm{display:none}th,td{padding:8px}.wrap{padding:22px 16px}h1{font-size:25px}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+<a class="brand" href="/"><b>Аукціон ресурсів</b><small>Сектор обміну · запаси обмежені</small></a>
+<nav>
+<a href="/">Лоти</a>
+{{if .User}}
+<a href="/lots/new">Виставити лот</a>
+<a href="/me">Кабінет</a>
+<span class="chips"><span class="chip{{if lt .User.Balance.Food 5}} low{{end}}">{{res "food"}}: {{.User.Balance.Food}}</span><span class="chip{{if lt .User.Balance.Water 5}} low{{end}}">{{res "water"}}: {{.User.Balance.Water}}</span><span class="chip{{if lt .User.Balance.Air 5}} low{{end}}">{{res "air"}}: {{.User.Balance.Air}}</span></span>
+<form method="post" action="/logout"><button>Вийти</button></form>
+{{else}}
+<a href="/login">Увійти</a>
+<a href="/register">Реєстрація</a>
+{{end}}
+</nav>
+</div></header>
+<main class="wrap">
+{{if .Message}}<div class="flash ok">{{.Message}}</div>{{end}}
+{{if .Error}}<div class="flash err">{{.Error}}</div>{{end}}
+{{template "content" .}}
+</main>
+<footer>Зв'язку із зовнішнім світом немає. Довіряйте лише своїм запасам.</footer>
+</body>
+</html>

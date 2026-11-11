@@ -1,0 +1,12 @@
+{{define "title"}}Вхід — Аукціон ресурсів{{end}}
+{{define "content"}}
+<h1>Вхід</h1>
+<div class="card">
+<form class="stack" method="post" action="/login">
+<label>Пошта<input type="email" name="email" value="{{.Form.Get "email"}}" required></label>
+<label>Пароль<input type="password" name="password" required></label>
+<div><button class="btn">Увійти</button></div>
+<p class="muted">Немає акаунта? <a href="/register">Зареєструватися</a></p>
+</form>
+</div>
+{{end}}

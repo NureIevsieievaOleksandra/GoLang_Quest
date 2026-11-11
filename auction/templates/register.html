@@ -1,0 +1,24 @@
+{{define "title"}}Реєстрація — Аукціон ресурсів{{end}}
+{{define "content"}}
+<h1>Реєстрація</h1>
+<p class="lead">Назвіться й опишіть, із чим ви прийшли. Система не перевіряє — але й не прощає.</p>
+<div class="card">
+<form class="stack" method="post" action="/register">
+<label>Ім'я<input name="name" value="{{.Form.Get "name"}}" maxlength="50" required></label>
+<label>Пошта<input type="email" name="email" value="{{.Form.Get "email"}}" required></label>
+<label>Пароль<input type="password" name="password" minlength="8" required><span class="hint">Щонайменше 8 символів</span></label>
+<label>Повторіть пароль<input type="password" name="confirm" minlength="8" required></label>
+<fieldset>
+<legend>Ваші запаси зараз</legend>
+<p class="hint">Перенесіть їх зі свого квесту — пункт «Запаси». Лише цілі числа.</p>
+<div class="row3">
+<label>{{res "food"}}, прийомів<input type="number" name="food" min="0" max="100000" value="{{.Form.Get "food"}}" required></label>
+<label>{{res "water"}}, л<input type="number" name="water" min="0" max="100000" value="{{.Form.Get "water"}}" required></label>
+<label>{{res "air"}}, год<input type="number" name="air" min="0" max="100000" value="{{.Form.Get "air"}}" required></label>
+</div>
+</fieldset>
+<div><button class="btn">Зареєструватися</button></div>
+<p class="muted">Вже є акаунт? <a href="/login">Увійти</a></p>
+</form>
+</div>
+{{end}}

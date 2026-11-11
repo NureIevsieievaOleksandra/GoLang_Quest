@@ -1,0 +1,44 @@
+{{define "content"}}
+<h1>Активні лоти</h1>
+<p class="lead">Обмінюйте те, що маєте, на те, без чого не протягнете.</p>
+{{with .Data.Active}}
+<table>
+<thead><tr><th>Лот</th><th>Ціна в</th><th>Поточна ставка</th><th class="hide-sm">Викуп</th><th>Залишилось</th><th class="hide-sm">Продавець</th></tr></thead>
+<tbody>
+{{range .}}
+<tr>
+<td><a href="/lots/{{.ID}}"><b>{{.OfferAmount}} × {{res .OfferResource}}</b></a></td>
+<td>{{res .PriceResource}}</td>
+<td class="num">{{if .HasBids}}{{.MaxBid}} <span class="muted">({{.BidCount}})</span>{{else}}<span class="muted">від {{.StartPrice}}</span>{{end}}</td>
+<td class="num hide-sm">{{if gt .BuyoutPrice 0}}{{if canBuyout .BuyoutPrice .MaxBid .HasBids}}{{.BuyoutPrice}}{{else}}<span class="muted">недоступний</span>{{end}}{{else}}<span class="muted">—</span>{{end}}</td>
+<td>{{left .EndsAt}}</td>
+<td class="hide-sm">{{.SellerName}}</td>
+</tr>
+{{end}}
+</tbody>
+</table>
+{{else}}
+<div class="empty">Зараз немає активних лотів. {{if $.User}}<a href="/lots/new">Виставте перший!</a>{{else}}<a href="/register">Зареєструйтеся</a>, щоб виставити свій.{{end}}</div>
+{{end}}
+
+<h2>Нещодавно завершені</h2>
+{{with .Data.Finished}}
+<table>
+<thead><tr><th>Лот</th><th>Результат</th><th>Ціна</th><th class="hide-sm">Продавець</th><th class="hide-sm">Покупець</th><th class="hide-sm">Завершено</th></tr></thead>
+<tbody>
+{{range .}}
+<tr>
+<td><a href="/lots/{{.ID}}">{{.OfferAmount}} × {{res .OfferResource}}</a></td>
+<td><span class="status">{{status .Status}}</span></td>
+<td class="num">{{if .FinalPrice}}{{.FinalPrice}} {{res .PriceResource}}{{else}}<span class="muted">—</span>{{end}}</td>
+<td class="hide-sm">{{.SellerName}}</td>
+<td class="hide-sm">{{if .WinnerName}}{{.WinnerName}}{{else}}<span class="muted">—</span>{{end}}</td>
+<td class="hide-sm muted">{{time .EndsAt}}</td>
+</tr>
+{{end}}
+</tbody>
+</table>
+{{else}}
+<div class="empty">Ще жоден аукціон не завершився.</div>
+{{end}}
+{{end}}

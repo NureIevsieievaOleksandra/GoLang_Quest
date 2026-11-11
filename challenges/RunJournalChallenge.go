@@ -1,16 +1,14 @@
 package challenges
 
 import (
-	"Quest/events"
-	"Quest/models"
-	"Quest/utils"
+	"Quest/survival"
 	"bufio"
 	"fmt"
 	"strconv"
 	"strings"
 )
 
-func RunJournal(reader *bufio.Reader, state *models.GameState) {
+func RunJournal(reader *bufio.Reader, state *survival.GameState) {
 	fmt.Println("\n=== ЖУРНАЛ ЛЮДИНИ, ЩО ВИЖИЛА (ЗАВДАННЯ 8) ===")
 
 JournalLoop:
@@ -30,7 +28,7 @@ JournalLoop:
 	}
 	fmt.Print("Оберіть пункт (1-7): ")
 
-	choice := strings.TrimSpace(utils.ReadString(reader))
+	choice := strings.TrimSpace(survival.ReadString(reader))
 	switch choice {
 	case "1":
 		journalShowMySupplies(state)
@@ -45,13 +43,13 @@ JournalLoop:
 			fmt.Println("Вік має бути цілим числом.")
 			break
 		}
-		p, err := models.NewParticipant(name, age)
+		p, err := survival.NewParticipant(name, age)
 		if err != nil {
 			fmt.Println("Помилка:", err)
 			break
 		}
 		if journalAskYes(reader, "Одразу додати перший день із запасами? (т/н): ") {
-			if d, ok := journalReadSupplies(reader, models.DaySupplies{}); ok {
+			if d, ok := journalReadSupplies(reader, survival.DaySupplies{}); ok {
 				if err := p.AddDay(d.Food, d.Water, d.Air); err != nil {
 					fmt.Println("Помилка:", err)
 				}
@@ -117,7 +115,7 @@ JournalLoop:
 	goto JournalLoop
 }
 
-func journalSuppliesMenu(reader *bufio.Reader, state *models.GameState, idx int) {
+func journalSuppliesMenu(reader *bufio.Reader, state *survival.GameState, idx int) {
 SuppliesLoop:
 	state.PushToJournal()
 	p, err := state.Journal.Get(idx)
@@ -139,7 +137,7 @@ SuppliesLoop:
 	fmt.Println("8. Назад")
 	fmt.Print("Оберіть пункт (1-8): ")
 
-	choice := strings.TrimSpace(utils.ReadString(reader))
+	choice := strings.TrimSpace(survival.ReadString(reader))
 	changed := false
 
 	switch choice {
@@ -147,7 +145,7 @@ SuppliesLoop:
 		journalShowDays(p)
 
 	case "2":
-		def := models.DaySupplies{}
+		def := survival.DaySupplies{}
 		if cur, err := p.CurrentDay(); err == nil {
 			def = *cur
 		}
@@ -169,7 +167,7 @@ SuppliesLoop:
 			break
 		}
 		fmt.Println("Скільки додати (Enter — 0):")
-		d, ok := journalReadSupplies(reader, models.DaySupplies{})
+		d, ok := journalReadSupplies(reader, survival.DaySupplies{})
 		if !ok {
 			break
 		}
@@ -200,7 +198,7 @@ SuppliesLoop:
 
 	case "5":
 		if len(p.Supplies) == 0 {
-			fmt.Println("Помилка:", models.ErrNoDays)
+			fmt.Println("Помилка:", survival.ErrNoDays)
 			break
 		}
 		if p.IsPlayer && len(p.Supplies) == 1 {
@@ -222,7 +220,7 @@ SuppliesLoop:
 
 	case "6":
 		fmt.Println("Який ресурс обнулити? 1 — їжа, 2 — вода, 3 — повітря")
-		res := map[string]string{"1": models.ResourceFood, "2": models.ResourceWater, "3": models.ResourceAir}
+		res := map[string]string{"1": survival.ResourceFood, "2": survival.ResourceWater, "3": survival.ResourceAir}
 		r, ok := res[journalReadLine(reader, "Ваш вибір: ")]
 		if !ok {
 			fmt.Println("Невідомий ресурс.")
@@ -252,14 +250,14 @@ SuppliesLoop:
 
 	if changed && p.IsPlayer {
 		if cur, err := p.CurrentDay(); err == nil {
-			events.ApplyEvent(state, events.SetSupplies(*cur))
+			survival.ApplyEvent(state, survival.SetSupplies(*cur))
 		}
 	}
 
 	goto SuppliesLoop
 }
 
-func journalShowMySupplies(state *models.GameState) {
+func journalShowMySupplies(state *survival.GameState) {
 	fmt.Println("\n========== ПОТОЧНІ ЗАПАСИ ==========")
 	fmt.Printf("• Повітря: %.1f год (~%.1f днів)\n", state.AirHours, state.AirHours/24.0)
 	fmt.Printf("• Вода:    %.2f л (~%.1f днів)\n", state.WaterLiters, state.WaterLiters/2.0)
@@ -270,7 +268,7 @@ func journalShowMySupplies(state *models.GameState) {
 	fmt.Println("=====================================")
 }
 
-func journalShowParticipants(j *models.Journal) {
+func journalShowParticipants(j *survival.Journal) {
 	if len(j.Participants) == 0 {
 		fmt.Println("(У журналі ще немає учасників)")
 		return
@@ -285,7 +283,7 @@ func journalShowParticipants(j *models.Journal) {
 	}
 }
 
-func journalShowDays(p *models.Participant) {
+func journalShowDays(p *survival.Participant) {
 	fmt.Printf("\n--- Дні виживання: %s ---\n", p.DisplayName())
 	if len(p.Supplies) == 0 {
 		fmt.Println("(Днів ще немає)")
@@ -300,14 +298,14 @@ func journalShowDays(p *models.Participant) {
 	}
 }
 
-func journalReward(state *models.GameState) {
+func journalReward(state *survival.GameState) {
 	if state.Task8Done {
 		return
 	}
-	events.ApplyEvent(state,
-		events.AddPoints(7),
-		events.AddSupplies(models.DaySupplies{Food: 2, Water: 6}),
-		func(s *models.Survivor) { s.Task8Done = true },
+	survival.ApplyEvent(state,
+		survival.AddPoints(7),
+		survival.AddSupplies(survival.DaySupplies{Food: 2, Water: 6}),
+		func(s *survival.Survivor) { s.Task8Done = true },
 	)
 	fmt.Println("\n[Журнал] Завдання 8 зараховано: +7 балів!")
 	fmt.Println("Отримано запас на два прийоми їжі (+2) та воду на 3 дні (+6 л).")
@@ -315,7 +313,7 @@ func journalReward(state *models.GameState) {
 
 func journalReadLine(reader *bufio.Reader, prompt string) string {
 	fmt.Print(prompt)
-	return strings.TrimSpace(utils.ReadString(reader))
+	return strings.TrimSpace(survival.ReadString(reader))
 }
 
 func journalReadInt(reader *bufio.Reader, prompt string) (int, bool) {
@@ -328,7 +326,7 @@ func journalAskYes(reader *bufio.Reader, prompt string) bool {
 	return ans == "т" || ans == "так" || ans == "y" || ans == "yes"
 }
 
-func journalPickParticipant(reader *bufio.Reader, j *models.Journal) (int, bool) {
+func journalPickParticipant(reader *bufio.Reader, j *survival.Journal) (int, bool) {
 	journalShowParticipants(j)
 	if len(j.Participants) == 0 {
 		return 0, false
@@ -341,7 +339,7 @@ func journalPickParticipant(reader *bufio.Reader, j *models.Journal) (int, bool)
 	return n - 1, true
 }
 
-func journalReadSupplies(reader *bufio.Reader, def models.DaySupplies) (models.DaySupplies, bool) {
+func journalReadSupplies(reader *bufio.Reader, def survival.DaySupplies) (survival.DaySupplies, bool) {
 	res := def
 
 	s := journalReadLine(reader, fmt.Sprintf("  Їжа, прийомів [%d]: ", def.Food))

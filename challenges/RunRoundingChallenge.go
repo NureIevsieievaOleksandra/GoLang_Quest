@@ -1,9 +1,7 @@
 package challenges
 
 import (
-	"Quest/events"
-	"Quest/models"
-	"Quest/utils"
+	"Quest/survival"
 	"bufio"
 	"fmt"
 	"math/rand"
@@ -11,7 +9,7 @@ import (
 	"strings"
 )
 
-func RunRoundingChallenge(reader *bufio.Reader, state *models.GameState) {
+func RunRoundingChallenge(reader *bufio.Reader, state *survival.GameState) {
 	fmt.Println("\n=== ВИПРОБУВАННЯ 1: НАБЛИЖЕНІ ОБЧИСЛЕННЯ ===")
 	fmt.Println("Округліть число до будь-якої зручної кількості знаків.")
 	fmt.Println("Потрібно дати 3 правильні відповіді поспіль.")
@@ -26,10 +24,10 @@ RoundLoop:
 			waterReward := 6.0
 			pointsReward := 7
 
-			events.ApplyEvent(state,
-				events.AddPoints(pointsReward),
-				events.AddSupplies(models.DaySupplies{Food: foodReward, Water: waterReward}),
-				func(s *models.Survivor) { s.Task4Done = true },
+			survival.ApplyEvent(state,
+				survival.AddPoints(pointsReward),
+				survival.AddSupplies(survival.DaySupplies{Food: foodReward, Water: waterReward}),
+				func(s *survival.Survivor) { s.Task4Done = true },
 			)
 
 			fmt.Printf("Нараховано: +%d балів!\n", pointsReward)
@@ -45,7 +43,7 @@ RoundLoop:
 	fmt.Printf("К: %s\n", generatedNumStr)
 	fmt.Print("П: ")
 
-	userInput := strings.TrimSpace(utils.ReadString(reader))
+	userInput := strings.TrimSpace(survival.ReadString(reader))
 	userInput = strings.ReplaceAll(userInput, ",", ".")
 	generatedNumStr = strings.ReplaceAll(generatedNumStr, ",", ".")
 
