@@ -31,3 +31,8 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
+
+# Game logs
+error_log.txt
+quest_simulation.log
+*.log
